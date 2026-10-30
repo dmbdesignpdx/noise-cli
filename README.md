@@ -7,3 +7,4 @@ This project uses:
 - Drizzle
 - Supabase
 - Bun
+- Biome

@@ -1,12 +1,10 @@
-// Theirs
-import { sql, arrayContains } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
 import readline from "node:readline/promises";
 import { styleText } from "node:util";
-import postgres from "postgres";
 import { banner } from "ascii.rest/terminal";
+import { arrayContains, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
-// Ours
 import { bands } from "./drizzle/schema";
 
 const client = postgres(process.env.DATABASE_URL, { max: 1, prepare: false });
@@ -21,13 +19,13 @@ process.stdout.write("\n\n\n");
 await banner("Noise Against Hate", {
   color: ["#B266FF", "#36C1F7"],
   shadow: "single",
-  effect: "still",
-  out: process.stdout,
+  effect: "glint",
+  tagline: "A CLI to find the next band to listen to.",
 });
 process.stdout.write("\n");
 
 // Prompt
-const input = await prompt.question("Enter a tag, or tags comma separated, to find a band: ");
+const input = await prompt.question("Enter a tag, or tags comma separated: ");
 
 prompt.close();
 
@@ -36,7 +34,7 @@ if (input === "exit") process.exit();
 const tag = String(input ?? "")
   .toLowerCase()
   .split(",")
-  .map((s) => s.trim());
+  .map(s => s.trim());
 
 process.stdout.write("Searching...\n\n");
 

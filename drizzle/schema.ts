@@ -475,14 +475,15 @@ export const webauthnCredentialsInAuth = auth.table("webauthn_credentials", {
 
 export const bands = pgTable.withRLS("bands", {
 	name: varchar({ length: 40 }).notNull(),
-	bandcamp: varchar({ length: 30 }).primaryKey(),
+	bandcamp: varchar({ length: 30 }).notNull(),
 	tags: text().array().notNull(),
 	country: country().default("United States").notNull(),
 	threads: boolean().default(false).notNull(),
 	image: varchar({ length: 50 }).default("").notNull(),
 	genres: text().array().default(sql`ARRAY[''::text]`).notNull(),
+	id: smallint().primaryKey().generatedByDefaultAsIdentity(),
 }, (table) => [
-	unique("bands_bandcamp_key").on(table.bandcamp),
+	unique("bands_name_key").on(table.name),
 	pgPolicy("Enable read access for all users", { for: "select", to: ["anon", "postgres"], using: sql`true` }),
 ]);
 
