@@ -119,8 +119,9 @@ export const mfaAmrClaimsInAuth = auth.table.withRLS("mfa_amr_claims", {
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
 	authenticationMethod: text("authentication_method").notNull(),
-	id: uuid().primaryKey(),
+	id: uuid().notNull(),
 }, (table) => [
+	primaryKey({ columns: [table.id], name: "amr_id_pk"}),
 	unique("mfa_amr_claims_session_id_authentication_method_pkey").on(table.sessionId, table.authenticationMethod),]);
 
 export const mfaChallengesInAuth = auth.table.withRLS("mfa_challenges", {
@@ -524,6 +525,7 @@ export const messagesInRealtime = realtime.table.withRLS("messages", {
 	skipBroadcast: boolean("skip_broadcast").default(false).notNull(),
 }, (table) => [
 	primaryKey({ columns: [table.id, table.insertedAt], name: "messages_pkey"}),
+	index("messages_inserted_at_topic_index").using("btree", table.insertedAt.desc().nullsFirst(), table.topic.asc().nullsLast()).where(sql`((extension = 'broadcast'::text) AND (private IS TRUE))`),
 check("messages_payload_exclusive", sql`((payload IS NULL) OR (binary_payload IS NULL))) NOT VALI`),]);
 
 export const schemaMigrationsInRealtime = realtime.table("schema_migrations", {
@@ -532,7 +534,7 @@ export const schemaMigrationsInRealtime = realtime.table("schema_migrations", {
 });
 
 export const subscriptionInRealtime = realtime.table("subscription", {
-	id: bigint({ mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+	id: bigint({ mode: 'number' }).generatedAlwaysAsIdentity(),
 	subscriptionId: uuid("subscription_id").notNull(),
 	entity: customType({ dataType: () => 'regclass' })().notNull(),
 	filters: customType({ dataType: () => 'realtime.user_defined_filter' })().array().default([]).notNull(),
@@ -542,6 +544,7 @@ export const subscriptionInRealtime = realtime.table("subscription", {
 	actionFilter: text("action_filter").default("*"),
 	selectedColumns: text("selected_columns").array(),
 }, (table) => [
+	primaryKey({ columns: [table.id], name: "pk_subscription"}),
 	index("ix_realtime_subscription_entity").using("btree", table.entity.asc().nullsLast()),
 	uniqueIndex("subscription_subscription_id_entity_filters_action_filter_selec").using("btree", table.subscriptionId.asc().nullsLast(), table.entity.asc().nullsLast(), table.filters.asc().nullsLast(), table.actionFilter.asc().nullsLast(), sql`COALESCE(selected_columns, '{}'::text[])`),
 check("subscription_action_filter_check", sql`(action_filter = ANY (ARRAY['*'::text, 'INSERT'::text, 'UPDATE'::text, 'DELETE'::text]))`),]);
